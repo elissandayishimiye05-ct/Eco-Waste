@@ -504,5 +504,72 @@ Please  Star this repository.
 It helps others discover the project and motivates future development.
 
 ---
+# 💳 Payment Management
+
+The system includes a secure payment module that enables residents and organizations to pay for waste collection services electronically.
+
+### Features
+
+- Service fee calculation
+- Online payment requests
+- Payment verification
+- Digital payment receipts
+- Payment history
+- Invoice generation
+- Payment status tracking
+
+### Supported Payment Methods
+
+- Mobile Money (MTN MoMo)
+- Airtel Money
+- Bank Transfer
+- Debit/Credit Cards (Future Integration)
+
+### Payment Status
+
+- Pending
+- Paid
+- Failed
+- Refunded
+
+---
+
+# 💰 Business Model
+
+The Waste Collection & Recycling Management System generates revenue through multiple streams:
+
+### 1. Subscription Plans
+
+Municipalities, waste collection companies, and recycling centers subscribe to the platform on a monthly or annual basis.
+
+### 2. Collection Service Fees
+
+Residents pay digitally when requesting waste collection services.
+
+### 3. Premium Analytics
+
+Organizations can access advanced reports and analytics through premium subscriptions.
+
+### 4. Government Partnerships
+
+The platform can be adopted by local governments for smart city waste management initiatives.
+
+### 5. Recycling Partnerships
+
+Recycling companies pay for access to recyclable material tracking and supply management.
+
+---
+
+# 🧾 Invoice Management
+
+The system automatically generates invoices after successful service requests.
+
+Features include:
+
+- Automatic invoice generation
+- PDF invoice download
+- Payment receipt generation
+- Payment history
+- Outstanding balance tracking
 
 ## 🌱 "Clean Environment, Smart Communities."
