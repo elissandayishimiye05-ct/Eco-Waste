@@ -571,5 +571,17 @@ Features include:
 - Payment receipt generation
 - Payment history
 - Outstanding balance tracking
+- # 🤖 Smart Features
+
+- AI-powered waste classification
+- GPS vehicle tracking
+- Smart route optimization
+- QR Code waste bin identification
+- SMS and Email notifications
+- Mobile App Integration
+- Real-time dashboard
+- Carbon footprint monitoring
+- Recycling performance analytics
 
 ## 🌱 "Clean Environment, Smart Communities."
+
