@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>♻️ Eco-Waste GPS Tracker Pro</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* ===== GLOBAL RESET & VARIABLES ===== */
+        :root {
+            --primary: #00c897;
+            --primary-dark: #00997a;
+            --primary-light: #e6f9f2;
+            --secondary: #2d3748;
+            --dark: #0f172a;
+            --darker: #0a0f1f;
+            --card-bg: rgba(255, 255, 255, 0.07);
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --radius: 20px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: var(--darker);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--text);
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--dark); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+
+        /* ===== HEADER ===== */
+        header {
+            background: linear-gradient(135deg, #0a0f1f 0%, #1a2a3a 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 1.2rem 2rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+        }
+
+        header h2 {
+            font-weight: 700;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            background: linear-gradient(135deg, #00c897, #00f5b0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header h2 i {
+            -webkit-text-fill-color: #00c897;
+            font-size: 1.8rem;
+        }
+
+        header p {
+            opacity: 0.7;
+            font-weight: 300;
+            margin-top: 4px;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            width: 96%;
+            max-width: 1450px;
+            margin: 20px auto 30px;
+            flex: 1;
+        }
+
+        /* ===== CARD ===== */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 24px 28px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            border-color: rgba(0, 200, 151, 0.15);
+        }
+
+        /* ===== STATS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: var(--glass);
+            padding: 14px 16px;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            cursor: default;
+        }
+
+        .stat-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            background: rgba(0, 200, 151, 0.05);
+        }
+
+        .stat-item .number {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1.2;
+        }
+
+        .stat-item .label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-item .label i {
+            margin-right: 4px;
+            color: var(--primary);
+        }
+
+        /* ===== DASHBOARD GRID ===== */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.6fr;
+            gap: 24px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ===== SECTION TITLE ===== */
+        .section-title {
+            color: var(--text);
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .section-title i {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        /* ===== FORM ===== */
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 14px;
+            margin-bottom: 12px;
+        }
+
+        .col {
+            flex: 1 1 140px;
+            min-width: 110px;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        label i {
+            color: var(--primary);
+            font-size: 0.75rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: var(--text);
+            transition: var(--transition);
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 200, 151, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        select option {
+            background: var(--dark);
+            color: var(--text);
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 200, 151, 0.25);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 200, 151, 0.35);
+        }
+
+        .btn-secondary {
+            background: var(--glass);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            background: rgba(0, 200, 151, 0.05);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .btn-info {
+            background: #0d6efd;
+            color: white;
+        }
+        .btn-info:hover {
+            background: #0b5ed7;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #198754;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #157347;
+            transform: translateY(-2px);
+        }
+
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.75rem;
+        }
+
+        .action-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 10px;
+            margin: 14px 0 12px;
+        }
+
+        .action-bar .btn {
+            flex: 1 0 auto;
+            min-width: 90px;
+            padding: 10px 16px;
+            font-size: 0.8rem;
+        }
+
+        /* ===== MAP ===== */
+        .map-wrapper {
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            height: 480px;
+            background: var(--dark);
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            background: var(--dark);
+        }
+
+        /* Leaflet overrides for dark theme */
+        .leaflet-control-attribution {
+            background: rgba(15, 23, 42, 0.8) !important;
+            color: var(--text-muted) !important;
+            backdrop-filter: blur(10px);
+        }
+        .leaflet-popup-content-wrapper {
+            background: var(--dark) !important;
+            color: var(--text) !important;
+            border: 1px solid var(--border);
+            border-radius: 12px !important;
+        }
+        .leaflet-popup-tip {
+            background: var(--dark) !important;
+        }
+
+        /* ===== INFO CHIP ===== */
+        .info-chip {
+            background: var(--glass);
+            padding: 8px 16px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+            color: var(--text);
+            border: 1px solid var(--border);
+            margin-top: 10px;
+        }
+
+        .info-chip span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .badge {
+            background: var(--primary);
+            color: white;
+            padding: 2px 12px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .gps-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+
+        .gps-active {
+            background: rgba(0, 200, 151, 0.15);
+            color: var(--primary);
+        }
+
+        .gps-inactive {
+            background: rgba(220, 53, 69, 0.15);
+            color: #dc3545;
+        }
+
+        .gps-pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+
+        .distance-display {
+            background: var(--primary);
+            color: var(--dark);
+            padding: 3px 14px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.7rem;
+        }
+
+        /* ===== REQUEST LIST ===== */
+        #requestList {
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        .request-item {
+            background: var(--glass);
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 6px;
+            border-left: 3px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            transition: var(--transition);
+        }
+
+        .request-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .request-item .status {
+            font-weight: 600;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+        }
+        .status-assigned {
+            background: rgba(13, 110, 253, 0.15);
+            color: #0d6efd;
+        }
+        .status-collected {
+            background: rgba(0, 200, 151, 0.15);
+            color: var(--primary);
+        }
+
+        .request-item .waste-badge {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== HISTORY ===== */
+        .history-panel {
+            margin-top: 14px;
+            background: var(--glass);
+            border-radius: 16px;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            max-height: 130px;
+            overflow-y: auto;
+        }
+
+        .history-panel h4 {
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 4px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .history-item .time {
+            color: var(--text-muted);
+            opacity: 0.6;
+            font-size: 0.7rem;
+        }
+
+        /* ===== FOOTER BAR ===== */
+        .footer-bar {
+            margin-top: 14px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-bar i {
+            color: var(--primary);
+            margin-right: 4px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            header h2 { font-size: 1.2rem; }
+            .card { padding: 16px; }
+            .action-bar .btn { min-width: 70px; padding: 8px 12px; font-size: 0.7rem; }
+            .map-wrapper { height: 300px; }
+            .info-chip { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .stat-item { padding: 10px; }
+            .stat-item .number { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h2><i class="fas fa-leaf"></i> Eco-Waste GPS Tracker Pro</h2>
+        <p><i class="fas fa-map-pin" style="margin-right: 6px;"></i>Admin · Collector · Real-time Waste Management</p>
+    </header>
+
+    <div class="container">
+        <div class="card">
+
+            <!-- ===== STATS ===== -->
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="number" id="totalResidents">0</div>
+                    <div class="label"><i class="fas fa-users"></i> Residents</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number" id="totalCenters">0</div>
+                    <div class="label"><i class="fas fa-recycle"></i> Centers</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number" id="pendingRequests">0</div>
+                    <div class="label"><i class="fas fa-clock"></i> Pending</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number" id="nearbyCenters">0</div>
+                    <div class="label"><i class="fas fa-location-dot"></i> Nearby</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number" id="collectedToday">0</div>
+                    <div class="label"><i class="fas fa-check-circle"></i> Collected</div>
+                </div>
+            </div>
+
+            <!-- ===== DASHBOARD ===== -->
+            <div class="dashboard-grid">
+                <!-- LEFT: Add & Requests -->
+                <div>
+                    <div class="section-title"><i class="fas fa-plus-circle"></i> Add Location</div>
+                    <div class="row">
+                        <div class="col">
+                            <label><i class="fas fa-tag"></i> Type</label>
+                            <select id="locationType">
+                                <option value="resident">Resident</option>
+                                <option value="center">Recycling Center</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label><i class="fas fa-user"></i> Name</label>
+                            <input type="text" id="newName" placeholder="e.g. Eco Hub" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <label><i class="fas fa-map-marker-alt"></i> Latitude</label>
+                            <input type="number" step="any" id="newLat" placeholder="-1.9441" />
+                        </div>
+                        <div class="col">
+                            <label><i class="fas fa-longitude-alt"></i> Longitude</label>
+                            <input type="number" step="any" id="newLng" placeholder="30.0619" />
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="addLocation()"><i class="fas fa-save"></i> Add Location</button>
+
+                    <div class="section-title" style="margin-top:18px;"><i class="fas fa-clipboard-list"></i> Collection Requests</div>
+                    <div id="requestList">
+                        <div class="request-item" style="color:var(--text-muted);font-style:italic;border-left-color:var(--text-muted);">
+                            No requests. Add residents first.
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                        <button class="btn btn-info btn-sm" onclick="generateRequests()"><i class="fas fa-plus"></i> Generate</button>
+                        <button class="btn btn-success btn-sm" onclick="assignAllRequests()"><i class="fas fa-check-double"></i> Assign All</button>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Map -->
+                <div>
+                    <div class="section-title"><i class="fas fa-map"></i> Live Map</div>
+                    <div class="map-wrapper">
+                        <div id="map"></div>
+                    </div>
+
+                    <!-- Info Chip -->
+                    <div class="info-chip" id="liveChip">
+                        <span><i class="fas fa-crosshairs"></i> <strong id="currentLabel">None</strong></span>
+                        <span><i class="fas fa-location-dot"></i> <span id="coordDisplay">-1.9441, 30.0619</span></span>
+                        <span class="badge" id="badgeType">📍 location</span>
+                        <span id="gpsStatus" class="gps-status gps-inactive"><i class="fas fa-circle"></i> GPS Off</span>
+                        <span id="distanceDisplay" class="distance-display"><i class="fas fa-route"></i> 0.0 km</span>
+                    </div>
+
+                    <div class="action-bar">
+                        <button class="btn btn-secondary" onclick="showAllLocations()"><i class="fas fa-globe"></i> All</button>
+                        <button class="btn btn-secondary" onclick="showResidents()"><i class="fas fa-user"></i> Residents</button>
+                        <button class="btn btn-secondary" onclick="showCenters()"><i class="fas fa-recycle"></i> Centers</button>
+                        <button class="btn btn-info" onclick="startGPS()"><i class="fas fa-satellite"></i> GPS</button>
+                        <button class="btn btn-danger" onclick="stopGPS()"><i class="fas fa-stop"></i> Stop</button>
+                        <button class="btn btn-success" onclick="optimizeRoute()"><i class="fas fa-route"></i> Route</button>
+                    </div>
+
+                    <div class="history-panel">
+                        <h4><i class="fas fa-history"></i> Activity Log</h4>
+                        <div id="historyList">
+                            <div class="history-item" style="color:var(--text-muted);font-style:italic;">No activity yet.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer-bar">
+                <span><i class="fas fa-arrows-spin"></i> Click markers for details</span>
+                <span><i class="fas fa-satellite"></i> GPS updates every 3s</span>
+                <span><i class="fas fa-recycle"></i> Nearby centers shown automatically</span>
+                <span><i class="fas fa-route"></i> Route optimization available</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        (function() {
+            "use strict";
+
+            // ===== DATA STORE =====
+            let residents = [];
+            let centers = [];
+            let requests = [];
+            let currentLocation = null;
+            let map, markersLayer, userMarker, routeLayer;
+            let gpsWatchId = null;
+            let gpsActive = false;
+            let historyLog = [];
+            let collectedCount = 0;
+
+            // ===== INIT MAP =====
+            function initMap() {
+                map = L.map('map', {
+                    center: [-1.9441, 30.0619],
+                    zoom: 13,
+                    zoomControl: true,
+                });
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap',
+                    className: 'dark-tiles'
+                }).addTo(map);
+                markersLayer = L.layerGroup().addTo(map);
+                routeLayer = L.layerGroup().addTo(map);
+                
+                addDefaultData();
+                renderAll();
+                updateStats();
+            }
+
+            // ===== DEFAULT DATA =====
+            function addDefaultData() {
+                residents = [
+                    { id: 'r1', name: 'John Doe', lat: -1.9441, lng: 30.0619, address: 'Kigali, Rwanda' },
+                    { id: 'r2', name: 'Jane Smith', lat: -1.9350, lng: 30.0750, address: 'Kigali, Rwanda' },
+                    { id: 'r3', name: 'Peter Munyaneza', lat: -1.9580, lng: 30.0550, address: 'Kigali, Rwanda' },
+                    { id: 'r4', name: 'Grace Uwimana', lat: -1.9280, lng: 30.0650, address: 'Kigali, Rwanda' },
+                    { id: 'r5', name: 'David Kagame', lat: -1.9700, lng: 30.0850, address: 'Kigali, Rwanda' },
+                ];
+                centers = [
+                    { id: 'c1', name: 'Kigali Recycling Hub', lat: -1.9500, lng: 30.0800, capacity: 500 },
+                    { id: 'c2', name: 'Green Waste Center', lat: -1.9300, lng: 30.0500, capacity: 300 },
+                    { id: 'c3', name: 'Eco-Recycle Kigali', lat: -1.9650, lng: 30.0700, capacity: 400 },
+                    { id: 'c4', name: 'Zero Waste Facility', lat: -1.9150, lng: 30.0600, capacity: 250 },
+                ];
+                generateRequests();
+            }
+
+            // ===== GENERATE REQUESTS =====
+            function generateRequests() {
+                requests = [];
+                residents.forEach((r) => {
+                    const numReqs = 1 + Math.floor(Math.random() * 2);
+                    for (let i = 0; i < numReqs; i++) {
+                        const statuses = ['pending', 'pending', 'assigned', 'collected'];
+                        const status = statuses[Math.floor(Math.random() * statuses.length)];
+                        let nearest = null;
+                        let minDist = Infinity;
+                        centers.forEach(c => {
+                            const d = calculateDistance(r.lat, r.lng, c.lat, c.lng);
+                            if (d < minDist) { minDist = d; nearest = c; }
+                        });
+                        requests.push({
+                            id: 'req_' + Date.now() + '_' + i + '_' + Math.random().toString(36).substr(2, 4),
+                            residentId: r.id,
+                            residentName: r.name,
+                            centerId: nearest ? nearest.id : null,
+                            centerName: nearest ? nearest.name : 'Unassigned',
+                            status: status,
+                            createdAt: new Date().toLocaleString(),
+                            wasteType: ['Plastic', 'Paper', 'Glass', 'Organic', 'Metal', 'E-Waste'][Math.floor(Math.random() * 6)],
+                            distance: nearest ? minDist : 0,
+                            weight: (5 + Math.random() * 45).toFixed(1)
+                        });
+                    }
+                });
+                if (requests.filter(r => r.status === 'pending').length === 0 && requests.length > 0) {
+                    requests[0].status = 'pending';
+                }
+                collectedCount = requests.filter(r => r.status === 'collected').length;
+                renderRequests();
+                updateStats();
+                addHistory('System', `Generated ${requests.length} collection requests`);
+            }
+
+            // ===== HELPERS =====
+            function calculateDistance(lat1, lng1, lat2, lng2) {
+                const R = 6371;
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLng = (lng2 - lng1) * Math.PI / 180;
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                          Math.sin(dLng/2) * Math.sin(dLng/2);
+                return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            }
+
+            function findNearbyCenters(lat, lng, radius = 5) {
+                return centers.filter(c => calculateDistance(lat, lng, c.lat, c.lng) <= radius);
+            }
+
+            // ===== RENDER MAP =====
+            function renderAll(filter = 'all') {
+                markersLayer.clearLayers();
+                routeLayer.clearLayers();
+                let visibleResidents = residents;
+                let visibleCenters = centers;
+
+                if (filter === 'residents') visibleCenters = [];
+                else if (filter === 'centers') visibleResidents = [];
+
+                // Resident markers
+                visibleResidents.forEach(r => {
+                    const hasPending = requests.some(req => req.residentId === r.id && req.status === 'pending');
+                    const marker = L.circleMarker([r.lat, r.lng], {
+                        radius: hasPending ? 10 : 7,
+                        color: hasPending ? '#ffc107' : '#00c897',
+                        fillColor: hasPending ? '#ffc107' : '#00c897',
+                        fillOpacity: 0.8,
+                        weight: 2,
+                    }).addTo(markersLayer);
+                    marker.bindPopup(`
+                        <div style="font-size:0.85rem;">
+                            <strong>🏠 ${r.name}</strong><br>
+                            📍 ${r.lat.toFixed(5)}, ${r.lng.toFixed(5)}<br>
+                            📮 ${r.address || 'N/A'}<br>
+                            <i class="fas fa-recycle" style="color:#00c897;"></i> Requests: ${requests.filter(req => req.residentId === r.id).length}
+                            ${hasPending ? '<br><span style="color:#ffc107;">⚠️ Pending collection</span>' : ''}
+                        </div>
+                    `);
+                    marker.on('click', () => {
+                        currentLocation = { lat: r.lat, lng: r.lng, name: r.name, type: 'resident' };
+                        updateChip(r.lat, r.lng, 'resident', r.name);
+                        showNearbyCenters(r.lat, r.lng);
+                        map.setView([r.lat, r.lng], 14);
+                    });
+                });
+
+                // Center markers
+                visibleCenters.forEach(c => {
+                    const marker = L.circleMarker([c.lat, c.lng], {
+                        radius: 14,
+                        color: '#0d6efd',
+                        fillColor: '#0d6efd',
+                        fillOpacity: 0.9,
+                        weight: 3,
+                    }).addTo(markersLayer);
+                    marker.bindPopup(`
+                        <div style="font-size:0.85rem;">
+                            <strong>♻️ ${c.name}</strong><br>
+                            📍 ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}<br>
+                            📦 Capacity: ${c.capacity || 'N/A'} kg<br>
+                            <i class="fas fa-truck"></i> Requests: ${requests.filter(req => req.centerId === c.id).length}
+                        </div>
+                    `);
+                    marker.on('click', () => {
+                        currentLocation = { lat: c.lat, lng: c.lng, name: c.name, type: 'center' };
+                        updateChip(c.lat, c.lng, 'center', c.name);
+                        map.setView([c.lat, c.lng], 14);
+                    });
+                });
+
+                if (currentLocation) {
+                    showNearbyCenters(currentLocation.lat, currentLocation.lng);
+                }
+            }
+
+            // ===== SHOW NEARBY CENTERS =====
+            function showNearbyCenters(lat, lng) {
+                const nearby = findNearbyCenters(lat, lng);
+                document.getElementById('nearbyCenters').textContent = nearby.length;
+                nearby.forEach(c => {
+                    L.circle([c.lat, c.lng], {
+                        radius: 300,
+                        color: '#ff6b6b',
+                        fillColor: '#ff6b6b',
+                        fillOpacity: 0.05,
+                        weight: 1.5,
+                        dashArray: '6,6'
+                    }).addTo(markersLayer);
+                });
+                addHistory('System', `Found ${nearby.length} nearby centers`);
+            }
+
+            // ===== OPTIMIZE ROUTE =====
+            window.optimizeRoute = function() {
+                routeLayer.clearLayers();
+                if (!currentLocation) {
+                    alert('Please select a location first by clicking a marker.');
+                    return;
+                }
+
+                const pending = requests.filter(r => r.status === 'pending');
+                if (pending.length === 0) {
+                    alert('No pending collections to route.');
+                    return;
+                }
+
+                // Get residents with pending requests
+                const pendingResidents = residents.filter(r => 
+                    pending.some(req => req.residentId === r.id)
+                );
+
+                if (pendingResidents.length === 0) {
+                    alert('No pending requests found.');
+                    return;
+                }
+
+                // Sort by distance from current location
+                const sorted = pendingResidents.map(r => ({
+                    ...r,
+                    dist: calculateDistance(currentLocation.lat, currentLocation.lng, r.lat, r.lng)
+                })).sort((a,b) => a.dist - b.dist);
+
+                // Draw route
+                const points = sorted.map(r => [r.lat, r.lng]);
+                if (points.length > 0) {
+                    const routeLine = L.polyline(points, {
+                        color: '#ffc107',
+                        weight: 3,
+                        opacity: 0.8,
+                        dashArray: '10,8',
+                        lineJoin: 'round'
+                    }).addTo(routeLayer);
+                    
+                    // Add markers for each stop
+                    sorted.forEach((r, idx) => {
+                        L.circleMarker([r.lat, r.lng], {
+                            radius: 6,
+                            color: '#ffc107',
+                            fillColor: '#ffc107',
+                            fillOpacity: 0.6,
+                            weight: 2,
+                        }).addTo(routeLayer)
+                          .bindPopup(`Stop ${idx+1}: ${r.name} (${r.dist.toFixed(2)}km)`);
+                    });
+
+                    // Fit bounds
+                    if (points.length > 1) {
+                        const bounds = L.latLngBounds(points);
+                        map.fitBounds(bounds, { padding: [50, 50] });
+                    }
+
+                    addHistory('Route', `Optimized route with ${sorted.length} stops`);
+                    alert(`✅ Route optimized with ${sorted.length} stops!\nTotal distance: ${sorted.reduce((sum, r) => sum + r.dist, 0).toFixed(2)} km`);
+                }
+            };
+
+            // ===== UPDATE CHIP =====
+            function updateChip(lat, lng, type, name) {
+                document.getElementById('coordDisplay').textContent = lat.toFixed(5) + ', ' + lng.toFixed(5);
+                document.getElementById('currentLabel').textContent = name || (type === 'resident' ? 'Resident' : 'Center');
+                document.getElementById('badgeType').textContent = type === 'resident' ? '📍 Resident' : '♻️ Center';
+                
+                if (type === 'resident') {
+                    const nearby = findNearbyCenters(lat, lng);
+                    if (nearby.length > 0) {
+                        const dist = calculateDistance(lat, lng, nearby[0].lat, nearby[0].lng);
+                        document.getElementById('distanceDisplay').innerHTML = 
+                            `<i class="fas fa-route"></i> ${dist.toFixed(2)} km to ${nearby[0].name}`;
+                    } else {
+                        document.getElementById('distanceDisplay').innerHTML = 
+                            `<i class="fas fa-route"></i> No nearby centers`;
+                    }
+                } else {
+                    document.getElementById('distanceDisplay').innerHTML = 
+                        `<i class="fas fa-route"></i> Center location`;
+                }
+            }
+
+            // ===== RENDER REQUESTS =====
+            function renderRequests() {
+                const container = document.getElementById('requestList');
+                if (requests.length === 0) {
+                    container.innerHTML = `<div class="request-item" style="color:var(--text-muted);font-style:italic;border-left-color:var(--text-muted);">
+                        No requests. Add residents first.
+                    </div>`;
+                    return;
+                }
+                let html = '';
+                const sorted = [...requests].sort((a,b) => {
+                    const order = { pending: 0, assigned: 1, collected: 2 };
+                    return (order[a.status] || 3) - (order[b.status] || 3);
+                });
+                sorted.slice(0, 15).forEach(req => {
+                    const statusClass = req.status === 'pending' ? 'status-pending' : 
+                                       req.status === 'assigned' ? 'status-assigned' : 'status-collected';
+                    const statusIcon = req.status === 'pending' ? '⏳' : 
+                                      req.status === 'assigned' ? '📋' : '✅';
+                    html += `
+                        <div class="request-item">
+                            <div style="flex:1;min-width:0;">
+                                <strong>${req.residentName}</strong>
+                                <span class="waste-badge">${req.wasteType}</span>
+                                <span style="font-size:0.65rem;color:var(--text-muted);display:block;">
+                                    📍 ${req.centerName} · ${req.distance.toFixed(1)}km · ${req.weight}kg
+                                </span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <span class="status ${statusClass}">${statusIcon} ${req.status}</span>
+                                <button onclick="updateRequestStatus('${req.id}')" 
+                                        class="btn btn-primary btn-sm" 
+                                        style="padding:4px 10px;font-size:0.65rem;min-width:auto;">
+                                    <i class="fas fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+                updateStats();
+            }
+
+            // ===== UPDATE REQUEST STATUS =====
+            window.updateRequestStatus = function(reqId) {
+                const req = requests.find(r => r.id === reqId);
+                if (!req) return;
+                const statuses = ['pending', 'assigned', 'collected'];
+                const currentIdx = statuses.indexOf(req.status);
+                if (currentIdx < statuses.length - 1) {
+                    req.status = statuses[currentIdx + 1];
+                    if (req.status === 'collected') collectedCount++;
+                    addHistory('Request', `${req.residentName} → ${req.status}`);
+                } else {
+                    req.status = 'pending';
+                    collectedCount--;
+                    addHistory('Request', `${req.residentName} → pending`);
+                }
+                renderRequests();
+                updateStats();
+            };
+
+            // ===== ASSIGN ALL REQUESTS =====
+            window.assignAllRequests = function() {
+                requests.forEach(req => {
+                    if (req.status === 'pending') {
+                        const nearest = centers.reduce((a, b) => {
+                            const da = calculateDistance(
+                                residents.find(r => r.id === req.residentId)?.lat || 0,
+                                residents.find(r => r.id === req.residentId)?.lng || 0,
+                                a.lat, a.lng
+                            );
+                            const db = calculateDistance(
+                                residents.find(r => r.id === req.residentId)?.lat || 0,
+                                residents.find(r => r.id === req.residentId)?.lng || 0,
+                                b.lat, b.lng
+                            );
+                            return da < db ? a : b;
+                        });
+                        req.centerId = nearest.id;
+                        req.centerName = nearest.name;
+                        req.distance = calculateDistance(
+                            residents.find(r => r.id === req.residentId)?.lat || 0,
+                            residents.find(r => r.id === req.residentId)?.lng || 0,
+                            nearest.lat, nearest.lng
+                        );
+                        req.status = 'assigned';
+                    }
+                });
+                renderRequests();
+                addHistory('System', 'All pending requests assigned');
+                alert('✅ All pending requests assigned to nearest centers!');
+            };
+
+            // ===== ADD LOCATION =====
+            window.addLocation = function() {
+                const type = document.getElementById('locationType').value;
+                const name = document.getElementById('newName').value.trim();
+                const lat = parseFloat(document.getElementById('newLat').value);
+                const lng = parseFloat(document.getElementById('newLng').value);
+
+                if (!name) { alert('Please enter a name.'); return; }
+                if (isNaN(lat) || isNaN(lng)) { alert('Please enter valid coordinates.'); return; }
+                if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                    alert('Coordinates out of range.');
+                    return;
+                }
+
+                if (type === 'resident') {
+                    residents.push({ id: 'r_' + Date.now(), name, lat, lng, address: 'Added by admin' });
+                    addHistory('Admin', `Added resident: ${name}`);
+                } else {
+                    centers.push({ id: 'c_' + Date.now(), name, lat, lng, capacity: 100 });
+                    addHistory('Admin', `Added center: ${name}`);
+                }
+
+                document.getElementById('newName').value = '';
+                document.getElementById('newLat').value = '';
+                document.getElementById('newLng').value = '';
+
+                generateRequests();
+                renderAll();
+                updateStats();
+                alert(`✅ ${type} "${name}" added successfully!`);
+            };
+
+            // ===== VIEW FILTERS =====
+            window.showAllLocations = function() { renderAll('all'); addHistory('View', 'Showing all locations'); };
+            window.showResidents = function() { renderAll('residents'); addHistory('View', 'Showing residents only'); };
+            window.showCenters = function() { renderAll('centers'); addHistory('View', 'Showing centers only'); };
+
+            // ===== GPS =====
+            window.startGPS = function() {
+                if (!navigator.geolocation) {
+                    alert('Geolocation not supported.');
+                    return;
+                }
+                if (gpsWatchId !== null) {
+                    alert('GPS already running.');
+                    return;
+                }
+                gpsWatchId = navigator.geolocation.watchPosition(
+                    (pos) => {
+                        const lat = pos.coords.latitude;
+                        const lng = pos.coords.longitude;
+                        const acc = pos.coords.accuracy;
+                        currentLocation = { lat, lng, name: 'GPS', type: 'resident' };
+                        updateChip(lat, lng, 'resident', 'Your Location');
+                        if (userMarker) map.removeLayer(userMarker);
+                        userMarker = L.circleMarker([lat, lng], {
+                            radius: 12,
+                            color: '#ff6b6b',
+                            fillColor: '#ff6b6b',
+                            fillOpacity: 0.9,
+                            weight: 3,
+                        }).addTo(map);
+                        userMarker.bindPopup('📍 Your Current Location');
+                        map.setView([lat, lng], 15);
+                        showNearbyCenters(lat, lng);
+                        addHistory('GPS', `Location updated (${acc.toFixed(0)}m)`);
+                        document.getElementById('gpsStatus').className = 'gps-status gps-active';
+                        document.getElementById('gpsStatus').innerHTML = 
+                            `<i class="fas fa-circle gps-pulse"></i> GPS Active (${acc.toFixed(0)}m)`;
+                        gpsActive = true;
+                    },
+                    (err) => {
+                        console.warn('GPS error:', err);
+                        document.getElementById('gpsStatus').className = 'gps-status gps-inactive';
+                        document.getElementById('gpsStatus').innerHTML = `<i class="fas fa-circle"></i> GPS Error`;
+                    },
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 3000 }
+                );
+                addHistory('System', 'GPS tracking started');
+            };
+
+            window.stopGPS = function() {
+                if (gpsWatchId !== null) {
+                    navigator.geolocation.clearWatch(gpsWatchId);
+                    gpsWatchId = null;
+                    gpsActive = false;
+                    if (userMarker) map.removeLayer(userMarker);
+                    document.getElementById('gpsStatus').className = 'gps-status gps-inactive';
+                    document.getElementById('gpsStatus').innerHTML = `<i class="fas fa-circle"></i> GPS Off`;
+                    addHistory('System', 'GPS tracking stopped');
+                } else {
+                    alert('GPS is not running.');
+                }
+            };
+
+            // ===== GENERATE REQUESTS =====
+            window.generateRequests = function() {
+                generateRequests();
+                renderRequests();
+                addHistory('System', 'Requests regenerated');
+            };
+
+            // ===== HISTORY =====
+            function addHistory(source, message) {
+                const time = new Date().toLocaleTimeString();
+                historyLog.unshift({ source, message, time });
+                if (historyLog.length > 30) historyLog.pop();
+                renderHistory();
+            }
+
+            function renderHistory() {
+                const container = document.getElementById('historyList');
+                if (historyLog.length === 0) {
+                    container.innerHTML = `<div class="history-item" style="color:var(--text-muted);font-style:italic;">No activity yet.</div>`;
+                    return;
+                }
+                let html = '';
+                historyLog.slice(0, 15).forEach(h => {
+                    html += `
+                        <div class="history-item">
+                            <span><strong>${h.source}</strong>: ${h.message}</span>
+                            <span class="time"><i class="far fa-clock"></i> ${h.time}</span>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+
+            // ===== UPDATE STATS =====
+            function updateStats() {
+                document.getElementById('totalResidents').textContent = residents.length;
+                document.getElementById('totalCenters').textContent = centers.length;
+                document.getElementById('pendingRequests').textContent = requests.filter(r => r.status === 'pending').length;
+                document.getElementById('collectedToday').textContent = requests.filter(r => r.status === 'collected').length;
+                if (currentLocation) {
+                    const nearby = findNearbyCenters(currentLocation.lat, currentLocation.lng);
+                    document.getElementById('nearbyCenters').textContent = nearby.length;
+                }
+            }
+
+            // ===== INIT =====
+            window.onload = function() {
+                initMap();
+                addHistory('System', 'Application started');
+            };
+
+        })();
+    </script>
+
+</body>
+</html>

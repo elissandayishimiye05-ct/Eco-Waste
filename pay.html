@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>👑 Eco-Waste Admin - Payment Management</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        :root {
+            --primary: #00c897;
+            --primary-dark: #00997a;
+            --dark: #0f172a;
+            --darker: #0a0f1f;
+            --card-bg: rgba(255, 255, 255, 0.07);
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background: var(--darker);
+            min-height: 100vh;
+            color: var(--text);
+            padding: 20px;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--dark); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+
+        .header {
+            background: linear-gradient(135deg, #0a0f1f 0%, #1a2a3a 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            border-radius: var(--radius);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-weight: 700;
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #00c897, #00f5b0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 i { -webkit-text-fill-color: #00c897; }
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            transition: var(--transition);
+        }
+
+        .card:hover { border-color: rgba(0, 200, 151, 0.15); }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .card-title i { color: var(--primary); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .stat-card .number { font-size: 2rem; font-weight: 800; color: var(--primary); line-height: 1.2; }
+        .stat-card .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+        .stat-card .label i { color: var(--primary); margin-right: 4px; }
+
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 200, 151, 0.25);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 200, 151, 0.35); }
+
+        .btn-success { background: #198754; color: white; }
+        .btn-success:hover { background: #157347; transform: translateY(-2px); }
+
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; transform: translateY(-2px); }
+
+        .btn-warning { background: #ffc107; color: #1a1a2e; }
+        .btn-warning:hover { background: #e0a800; transform: translateY(-2px); }
+
+        .btn-secondary { background: var(--glass); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--primary); background: rgba(0, 200, 151, 0.05); }
+
+        .btn-sm { padding: 6px 14px; font-size: 0.75rem; }
+
+        .status-badge {
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-paid { background: rgba(0, 200, 151, 0.15); color: #00c897; }
+        .status-pending { background: rgba(255, 193, 7, 0.15); color: #ffc107; }
+        .status-failed { background: rgba(220, 53, 69, 0.15); color: #dc3545; }
+        .status-refunded { background: rgba(108, 117, 125, 0.15); color: #adb5bd; }
+
+        .payment-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .payment-table th {
+            text-align: left;
+            padding: 12px 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--darker);
+        }
+        .payment-table td { padding: 12px 10px; border-bottom: 1px solid var(--border); color: var(--text); }
+        .payment-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+        .table-wrapper {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .filter-bar input, .filter-bar select {
+            padding: 8px 14px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 0.85rem;
+            min-width: 150px;
+        }
+
+        .filter-bar input:focus, .filter-bar select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .filter-bar select option { background: var(--dark); color: var(--text); }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal .close-btn { float: right; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
+        .modal .close-btn:hover { color: var(--text); }
+
+        .mt-16 { margin-top: 16px; }
+        .mb-16 { margin-bottom: 16px; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .text-center { text-align: center; }
+        .text-success { color: #00c897; }
+        .text-danger { color: #dc3545; }
+        .text-warning { color: #ffc107; }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; text-align: center; }
+            .header h1 { font-size: 1.3rem; }
+            .filter-bar input, .filter-bar select { min-width: 100px; }
+            .payment-table { font-size: 0.75rem; }
+            .payment-table th, .payment-table td { padding: 8px 6px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <h1><i class="fas fa-user-shield"></i> Admin Payment Management</h1>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="window.location.href='user-payments.html'"><i class="fas fa-arrow-left"></i> User Page</button>
+            <button class="btn btn-success" onclick="refreshData()"><i class="fas fa-sync"></i> Refresh</button>
+            <button class="btn btn-primary" onclick="exportData()"><i class="fas fa-file-export"></i> Export</button>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="number" id="totalRevenue">0 RWF</div>
+            <div class="label"><i class="fas fa-dollar-sign"></i> Total Revenue</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="totalPayments">0</div>
+            <div class="label"><i class="fas fa-credit-card"></i> Total Payments</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="paidCount">0</div>
+            <div class="label"><i class="fas fa-check-circle"></i> Paid</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="pendingCount">0</div>
+            <div class="label"><i class="fas fa-clock"></i> Pending</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="failedCount">0</div>
+            <div class="label"><i class="fas fa-times-circle"></i> Failed</div>
+        </div>
+    </div>
+
+    <!-- PAYMENTS TABLE -->
+    <div class="card">
+        <div class="card-title flex-between">
+            <span><i class="fas fa-list"></i> All Payments</span>
+            <span style="font-size:0.75rem;color:var(--text-muted);">Total: <span id="paymentCount">0</span> transactions</span>
+        </div>
+
+        <div class="filter-bar">
+            <input type="text" id="searchInput" placeholder="🔍 Search by name or ID..." oninput="filterPayments()" />
+            <select id="statusFilter" onchange="filterPayments()">
+                <option value="all">All Status</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="failed">Failed</option>
+                <option value="refunded">Refunded</option>
+            </select>
+            <select id="methodFilter" onchange="filterPayments()">
+                <option value="all">All Methods</option>
+                <option value="MTN Mobile Money">MTN Mobile Money</option>
+                <option value="Airtel Money">Airtel Money</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Debit/Credit Card">Debit/Credit Card</option>
+            </select>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="payment-table">
+                <thead>
+                    <tr>
+                        <th>Payment ID</th>
+                        <th>Customer</th>
+                        <th>Service</th>
+                        <th>Amount (RWF)</th>
+                        <th>Method</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentsBody">
+                    <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);">Loading payments...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CONFIRM MODAL -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal">
+            <button class="close-btn" onclick="closeConfirmModal()"><i class="fas fa-times"></i></button>
+            <h3 style="margin-bottom:16px;"><i class="fas fa-check-circle" style="color:var(--primary);"></i> Confirm Payment</h3>
+            <div id="confirmContent">
+                <p>Are you sure you want to confirm this payment?</p>
+                <div style="margin-top:16px;display:flex;gap:10px;">
+                    <button class="btn btn-success" onclick="confirmPayment()"><i class="fas fa-check"></i> Confirm</button>
+                    <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DETAIL MODAL -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal" style="max-width:700px;">
+            <button class="close-btn" onclick="closeDetailModal()"><i class="fas fa-times"></i></button>
+            <h3 style="margin-bottom:16px;"><i class="fas fa-file-invoice" style="color:var(--primary);"></i> Payment Details</h3>
+            <div id="detailContent"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ===== DATA =====
+    let payments = [];
+    let filteredPayments = [];
+    let currentPaymentId = null;
+
+    // ===== LOAD DATA =====
+    function loadData() {
+        const saved = localStorage.getItem('ecowaste_payments');
+        if (saved) {
+            payments = JSON.parse(saved);
+        } else {
+            // Seed sample data
+            payments = [
+                { id: 'PAY-1001', customer: 'John Doe', amount: 25000, method: 'MTN Mobile Money', status: 'paid', date: '2026-07-10', service: 'Waste Collection', phone: '0788123456', email: 'john@example.com' },
+                { id: 'PAY-1002', customer: 'Jane Smith', amount: 40000, method: 'Airtel Money', status: 'paid', date: '2026-07-09', service: 'Recycling Service', phone: '0788234567', email: 'jane@example.com' },
+                { id: 'PAY-1003', customer: 'Peter Munyaneza', amount: 15000, method: 'Bank Transfer', status: 'pending', date: '2026-07-08', service: 'Special Pickup', phone: '0788345678', email: 'peter@example.com' },
+                { id: 'PAY-1004', customer: 'Grace Uwimana', amount: 30000, method: 'MTN Mobile Money', status: 'paid', date: '2026-07-07', service: 'Bulk Waste', phone: '0788456789', email: 'grace@example.com' },
+                { id: 'PAY-1005', customer: 'David Kagame', amount: 20000, method: 'Airtel Money', status: 'pending', date: '2026-07-06', service: 'Waste Collection', phone: '0788567890', email: 'david@example.com' },
+                { id: 'PAY-1006', customer: 'Sarah Mukamana', amount: 35000, method: 'MTN Mobile Money', status: 'failed', date: '2026-07-05', service: 'Recycling Service', phone: '0788678901', email: 'sarah@example.com' },
+            ];
+            localStorage.setItem('ecowaste_payments', JSON.stringify(payments));
+        }
+        filteredPayments = [...payments];
+        renderAll();
+        updateStats();
+    }
+
+    // ===== FORMAT CURRENCY =====
+    function formatCurrency(amount) {
+        return amount.toLocaleString('rw-RW', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    // ===== RENDER PAYMENTS =====
+    function renderPayments() {
+        const tbody = document.getElementById('paymentsBody');
+        if (filteredPayments.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);">No payments found</td></tr>`;
+            return;
+        }
+        let html = '';
+        filteredPayments.forEach(p => {
+            const statusClass = p.status === 'paid' ? 'status-paid' :
+                               p.status === 'pending' ? 'status-pending' :
+                               p.status === 'failed' ? 'status-failed' : 'status-refunded';
+            const statusIcon = p.status === 'paid' ? '✅' :
+                              p.status === 'pending' ? '⏳' :
+                              p.status === 'failed' ? '❌' : '🔄';
+            html += `
+                <tr>
+                    <td style="font-weight:600;font-size:0.75rem;">${p.id}</td>
+                    <td><strong>${p.customer}</strong><br><span style="font-size:0.7rem;color:var(--text-muted);">${p.phone || 'N/A'}</span></td>
+                    <td style="font-size:0.8rem;">${p.service}</td>
+                    <td style="font-weight:700;color:var(--primary);">${formatCurrency(p.amount)} RWF</td>
+                    <td style="font-size:0.75rem;color:var(--text-muted);">${p.method}</td>
+                    <td style="font-size:0.75rem;color:var(--text-muted);">${p.date}</td>
+                    <td><span class="status-badge ${statusClass}">${statusIcon} ${p.status}</span></td>
+                    <td>
+                        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                            <button class="btn btn-secondary btn-sm" onclick="viewDetails('${p.id}')" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${p.status === 'pending' ? `
+                                <button class="btn btn-success btn-sm" onclick="openConfirmModal('${p.id}')" title="Confirm Payment">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            ` : ''}
+                            ${p.status === 'paid' ? `
+                                <button class="btn btn-warning btn-sm" onclick="markAsRefunded('${p.id}')" title="Refund">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+        document.getElementById('paymentCount').textContent = filteredPayments.length;
+    }
+
+    // ===== FILTER PAYMENTS =====
+    function filterPayments() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+        const method = document.getElementById('methodFilter').value;
+
+        filteredPayments = payments.filter(p => {
+            const matchSearch = p.customer.toLowerCase().includes(search) || p.id.toLowerCase().includes(search);
+            const matchStatus = status === 'all' || p.status === status;
+            const matchMethod = method === 'all' || p.method === method;
+            return matchSearch && matchStatus && matchMethod;
+        });
+
+        renderPayments();
+        updateStats();
+    }
+
+    // ===== VIEW DETAILS =====
+    function viewDetails(paymentId) {
+        const p = payments.find(pay => pay.id === paymentId);
+        if (!p) return;
+
+        const container = document.getElementById('detailContent');
+        container.innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div><strong>Payment ID:</strong> ${p.id}</div>
+                <div><strong>Status:</strong> <span class="status-badge ${p.status === 'paid' ? 'status-paid' : p.status === 'pending' ? 'status-pending' : 'status-failed'}">${p.status}</span></div>
+                <div><strong>Customer:</strong> ${p.customer}</div>
+                <div><strong>Service:</strong> ${p.service}</div>
+                <div><strong>Amount:</strong> <span style="color:var(--primary);font-weight:700;">${formatCurrency(p.amount)} RWF</span></div>
+                <div><strong>Method:</strong> ${p.method}</div>
+                <div><strong>Date:</strong> ${p.date}</div>
+                <div><strong>Phone:</strong> ${p.phone || 'N/A'}</div>
+                <div><strong>Email:</strong> ${p.email || 'N/A'}</div>
+            </div>
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;">
+                ${p.status === 'pending' ? `
+                    <button class="btn btn-success" onclick="confirmPaymentDirect('${p.id}')"><i class="fas fa-check"></i> Confirm Payment</button>
+                ` : ''}
+                ${p.status === 'paid' ? `
+                    <button class="btn btn-warning" onclick="markAsRefunded('${p.id}')"><i class="fas fa-undo"></i> Refund</button>
+                ` : ''}
+                <button class="btn btn-secondary" onclick="closeDetailModal()">Close</button>
+            </div>
+        `;
+
+        document.getElementById('detailModal').classList.add('active');
+    }
+
+    // ===== CONFIRM PAYMENT =====
+    function openConfirmModal(paymentId) {
+        currentPaymentId = paymentId;
+        document.getElementById('confirmModal').classList.add('active');
+    }
+
+    function confirmPayment() {
+        confirmPaymentDirect(currentPaymentId);
+    }
+
+    function confirmPaymentDirect(paymentId) {
+        const p = payments.find(pay => pay.id === paymentId);
+        if (!p) return;
+
+        p.status = 'paid';
+        // Update associated invoice
+        const invoices = JSON.parse(localStorage.getItem('ecowaste_invoices') || '[]');
+        const inv = invoices.find(i => i.paymentId === paymentId);
+        if (inv) {
+            inv.status = 'paid';
+            inv.paymentStatus = 'paid';
+            localStorage.setItem('ecowaste_invoices', JSON.stringify(invoices));
+        }
+
+        localStorage.setItem('ecowaste_payments', JSON.stringify(payments));
+        closeConfirmModal();
+        closeDetailModal();
+        filterPayments();
+        updateStats();
+        showNotification('✅ Payment confirmed successfully!');
+    }
+
+    // ===== MARK AS REFUNDED =====
+    function markAsRefunded(paymentId) {
+        if (!confirm('Are you sure you want to refund this payment?')) return;
+
+        const p = payments.find(pay => pay.id === paymentId);
+        if (!p) return;
+
+        p.status = 'refunded';
+        const invoices = JSON.parse(localStorage.getItem('ecowaste_invoices') || '[]');
+        const inv = invoices.find(i => i.paymentId === paymentId);
+        if (inv) {
+            inv.status = 'pending';
+            inv.paymentStatus = 'refunded';
+            localStorage.setItem('ecowaste_invoices', JSON.stringify(invoices));
+        }
+
+        localStorage.setItem('ecowaste_payments', JSON.stringify(payments));
+        filterPayments();
+        updateStats();
+        showNotification('🔄 Payment refunded successfully');
+    }
+
+    // ===== UPDATE STATS =====
+    function updateStats() {
+        const totalRevenue = payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0);
+        const paidCount = payments.filter(p => p.status === 'paid').length;
+        const pendingCount = payments.filter(p => p.status === 'pending').length;
+        const failedCount = payments.filter(p => p.status === 'failed').length;
+
+        document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue) + ' RWF';
+        document.getElementById('totalPayments').textContent = payments.length;
+        document.getElementById('paidCount').textContent = paidCount;
+        document.getElementById('pendingCount').textContent = pendingCount;
+        document.getElementById('failedCount').textContent = failedCount;
+    }
+
+    // ===== RENDER ALL =====
+    function renderAll() {
+        renderPayments();
+    }
+
+    // ===== REFRESH DATA =====
+    function refreshData() {
+        loadData();
+        showNotification('🔄 Data refreshed!');
+    }
+
+    // ===== EXPORT DATA =====
+    function exportData() {
+        const data = JSON.stringify(payments, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ecowaste_payments_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showNotification('📄 Data exported successfully!');
+    }
+
+    // ===== NOTIFICATION =====
+    function showNotification(msg) {
+        const el = document.createElement('div');
+        el.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--dark);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 16px 24px;
+            color: var(--text);
+            z-index: 2000;
+            box-shadow: var(--shadow);
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+        `;
+        el.innerHTML = msg;
+        document.body.appendChild(el);
+        setTimeout(() => {
+            el.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => el.remove(), 300);
+        }, 3000);
+    }
+
+    // ===== MODAL CONTROLS =====
+    function closeConfirmModal() {
+        document.getElementById('confirmModal').classList.remove('active');
+    }
+
+    function closeDetailModal() {
+        document.getElementById('detailModal').classList.remove('active');
+    }
+
+    // ===== CLICK OUTSIDE TO CLOSE =====
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+    });
+
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', loadData);
+</script>
+
+</body>
+</html>
